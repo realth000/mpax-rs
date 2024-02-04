@@ -1,0 +1,9 @@
+[workspace]
+members = ["libmpax", "mpaxctl", "mpaxd"]
+
+[workspace.dependencies]
+anyhow = { version = "1.0.79" }
+clap = { version = "4.4.18" }
+
+workspace.resolver = "2"
+

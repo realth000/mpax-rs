@@ -1,0 +1,14 @@
+# Editors
+/.idea
+/.vscode
+*.swp
+
+# Patch 
+*.orig
+*.rej
+
+# Rust build dirs
+/target
+/libmpax/target
+/mpaxctl/target
+/mpaxd/target
