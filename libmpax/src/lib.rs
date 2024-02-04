@@ -1,3 +1,5 @@
+mod single_app;
+
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
