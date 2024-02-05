@@ -1,16 +1,28 @@
-use std::fs::File;
-use std::io::BufReader;
+use std::io::{Read, Seek};
+use std::sync::{Arc, Mutex};
 
-use rodio::{Decoder, OutputStream, Source};
+use anyhow::Result;
+use rust_i18n::i18n;
 
-use libmpax::add;
+use crate::player::Player;
 
-fn main() {
-    let (_s, stream_handle) = OutputStream::try_default().unwrap();
-    let file = BufReader::new(File::open("some path").unwrap());
-    let source = Decoder::new(file).unwrap();
-    stream_handle.play_raw(source.convert_samples()).unwrap();
-    let x = add(2, 3);
-    println!("Hello, world! {x}");
-    std::thread::sleep(std::time::Duration::from_secs(100));
+i18n!("mpaxd/i18n");
+
+mod player;
+
+// "/home/lth/test.mp3"
+
+/// Launch and run the player thread
+async fn launch_player_thread(player: &mut Mutex<Player>) {
+    let _x = player.lock().unwrap().run_main_loop();
+    println!("player thread exit");
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let mut player = Arc::new(Mutex::new(Player::new()?));
+    let mut player_clone = player.clone();
+    let play_thread_handle = tokio::spawn(launch_player_thread(&mut player_clone));
+    tokio::join!(play_thread_handle);
+    Ok(())
 }

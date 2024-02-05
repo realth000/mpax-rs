@@ -20,7 +20,7 @@ pub fn unregister_single_app(app_id: &str) {
 /// * [true] if already registered.
 /// * [false] if not registered.
 ///
-/// # Panics
+/// # Errors
 ///
 /// * When checking status.
 pub fn check_single_app_registered(app_id: &str) -> Result<bool> {

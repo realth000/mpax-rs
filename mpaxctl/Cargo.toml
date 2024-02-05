@@ -10,3 +10,5 @@ anyhow = { workspace = true }
 clap = { workspace = true }
 dbus = "0.9.7"
 libmpax = { path = "../libmpax" }
+racros = { workspace = true }
+rust-i18n = { workspace = true }

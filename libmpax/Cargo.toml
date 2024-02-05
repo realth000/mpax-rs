@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 interprocess = { workspace = true }
+racros = { workspace = true }
+rust-i18n = { workspace = true }

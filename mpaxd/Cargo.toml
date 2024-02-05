@@ -9,5 +9,7 @@ edition = "2021"
 anyhow = { workspace = true }
 clap = { workspace = true }
 libmpax = { path = "../libmpax" }
+racros = { workspace = true }
 rodio = "0.17.3"
-tokio = { version = "1.36.0", features = ["io-std"] }
+rust-i18n = { workspace = true }
+tokio = { version = "1.36.0", features = ["io-std", "rt", "rt-multi-thread", "macros"] }

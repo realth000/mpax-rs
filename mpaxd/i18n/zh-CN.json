@@ -1,0 +1,7 @@
+{
+  "_version": 1,
+  "player.failedToOpenAudioFile": "无法打开音频文件: %{path}",
+  "player.failedToDecodeAudioFile": "无法解析音频文件: %{path}",
+  "player.canNotPauseNoAudioLoaded": "无法暂停：未加载任何音频",
+  "player.failedToInit": "初始化播放器时失败"
+}

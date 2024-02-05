@@ -1,0 +1,7 @@
+{
+  "_version": 1,
+  "player.failedToOpenAudioFile": "Failed to open audio file: %{path}",
+  "player.failedToDecodeAudioFile": "Failed to decode audio file: %{path}",
+  "player.canNotPauseNoAudioLoaded": "Can not pause: no audio loaded",
+  "player.failedToInit": "Failed to init player"
+}

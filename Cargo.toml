@@ -5,6 +5,8 @@ members = ["libmpax", "mpaxctl", "mpaxd"]
 anyhow = { version = "1.0.79" }
 clap = { version = "4.4.18" }
 interprocess = { version = "1.2.1" }
+racros = { version = "0.1.0" }
+rust-i18n = { version = "3.0.1" }
 
 workspace.resolver = "2"
 
