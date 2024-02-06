@@ -8,8 +8,10 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true }
+env_logger = { workspace = true }
 libmpax = { path = "../libmpax" }
+log = { workspace = true }
 racros = { workspace = true }
 rodio = "0.17.3"
 rust-i18n = { workspace = true }
-tokio = { version = "1.36.0", features = ["io-std", "rt", "rt-multi-thread", "macros"] }
+tokio = { version = "1.36.0", features = ["io-std", "rt", "rt-multi-thread", "macros", "time"] }

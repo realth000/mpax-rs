@@ -9,6 +9,8 @@ edition = "2021"
 anyhow = { workspace = true }
 clap = { workspace = true }
 dbus = "0.9.7"
+env_logger = { workspace = true }
 libmpax = { path = "../libmpax" }
+log = { workspace = true }
 racros = { workspace = true }
 rust-i18n = { workspace = true }

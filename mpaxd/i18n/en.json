@@ -3,5 +3,6 @@
   "player.failedToOpenAudioFile": "Failed to open audio file: %{path}",
   "player.failedToDecodeAudioFile": "Failed to decode audio file: %{path}",
   "player.canNotPauseNoAudioLoaded": "Can not pause: no audio loaded",
-  "player.failedToInit": "Failed to init player"
+  "player.failedToInit": "Failed to init player",
+  "player.failedToReceiveOperation": "Player failed to receive the operation"
 }
