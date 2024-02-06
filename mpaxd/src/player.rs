@@ -3,7 +3,7 @@ use std::io::BufReader;
 use std::sync::mpsc::Receiver;
 
 use anyhow::{anyhow, Context, Result};
-use log::{debug, error};
+use log::{debug, error, info};
 use racros::AutoDebug;
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
 use rust_i18n::t;
@@ -16,10 +16,13 @@ pub enum PlayAction {
 
     /// Pause the play process.
     Pause,
+
     /// Resume the play process.
     Resume,
 
     /// Stop the player.
+    ///
+    /// This will quit the player main loop.
     Stop,
 
     /// Turn to exit.
@@ -243,6 +246,16 @@ impl Player {
                 }
             }
         }
+        println!(">????");
         Ok(())
     }
+}
+
+/// Launch and run the player thread
+pub async fn launch_player_thread(rx: Receiver<PlayAction>) -> Result<()> {
+    info!("player thread start");
+    let mut player = Player::new(rx).context("player thread exit with error")?;
+    player.run_main_loop().await?;
+    info!("player thread exit");
+    Ok(())
 }

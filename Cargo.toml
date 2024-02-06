@@ -9,6 +9,8 @@ interprocess = { version = "1.2.1" }
 log = { version = "0.4.20" }
 racros = { version = "0.1.0" }
 rust-i18n = { version = "3.0.1" }
+serde = { version = "1.0.196", features = ["derive"] }
+serde_json = { version = "1.0.113" }
 
 workspace.resolver = "2"
 
