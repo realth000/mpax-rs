@@ -7,7 +7,7 @@ use futures::task::SpawnExt;
 use rust_i18n::i18n;
 
 use crate::player::{launch_player_thread, PlayAction};
-use crate::server::launch_socket_thread;
+use crate::server::launch_server_thread;
 
 i18n!("i18n");
 
@@ -20,7 +20,7 @@ async fn main() -> Result<()> {
     let (tx, rx) = channel::<PlayAction>();
     let _tx = tx.clone();
     let player_thread_handle = tokio::spawn(launch_player_thread(rx));
-    let server_thread_handle = tokio::spawn(launch_socket_thread(tx));
+    let server_thread_handle = tokio::spawn(launch_server_thread(tx));
     player_thread_handle.await??;
     server_thread_handle.await??;
     //join_all([player_thread_handle, server_thread_handle]).await;

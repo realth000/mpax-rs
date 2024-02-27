@@ -1,7 +1,10 @@
 use std::sync::mpsc::Sender;
 
 use anyhow::Result;
+use axum::Router;
+use axum::routing::get;
 use log::info;
+use tokio::net::TcpListener;
 
 use crate::player::PlayAction;
 
@@ -11,14 +14,11 @@ use crate::player::PlayAction;
 ///
 /// This function takes a [Sender] type argument [tx] to send
 /// Operations to the [Player].
-pub async fn launch_socket_thread(tx: Sender<PlayAction>) -> Result<()> {
-    info!("socket thread start");
-    // TODO: Launch the socket server.
-    // TODO: Convert client requests into [PlayAction]s.
-
-    //listen_and_
-    // tokio::time::sleep(Duration::from_secs(100)).await;
-
-    info!("socket thread exit");
+pub async fn launch_server_thread(tx: Sender<PlayAction>) -> Result<()> {
+    info!("server thread start");
+    let server = Router::new().route("/", get(|| async { "Hello World!" }));
+    let listener = TcpListener::bind("0.0.0.0:18519").await.unwrap();
+    axum::serve(listener, server).await.unwrap();
+    info!("server thread exit");
     Ok(())
 }
