@@ -11,6 +11,7 @@ use crate::server::launch_server_thread;
 
 i18n!("i18n");
 
+mod config;
 mod player;
 mod server;
 
