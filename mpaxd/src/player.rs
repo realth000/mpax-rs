@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::sync::mpsc::Receiver;
 
+use crate::playlist::Playlist;
 use anyhow::{anyhow, Context, Result};
 use log::{debug, error, info};
 use racros::AutoDebug;
@@ -116,6 +117,9 @@ pub struct Player {
 
     /// Receiver to receive operations.
     rx: Receiver<PlayAction>,
+
+    /// Current playlist
+    playlist: Playlist,
 }
 
 /// FIXME: Check if is safe or use another way to achieve this.
@@ -139,6 +143,7 @@ impl Player {
             audio: None,
             play_mode: PlayMode::RepeatPlaylist,
             rx,
+            playlist: Playlist::new("default".to_string()),
         })
     }
 
