@@ -41,6 +41,55 @@ impl Playlist {
             .is_some()
     }
 
+    /// Get index (in playlist) of the previous music before the one at `file_path`.
+    ///
+    /// * Return `None` if `file_path` not exists in playlist.
+    /// * Return the next music's index in playlist if found.
+    /// * Return the last one if `file_path` is the first one.
+    pub fn previous_of_path(&self, file_path: &str) -> Option<usize> {
+        if self.music.is_empty() {
+            return None;
+        }
+        let current = self.music.iter().position(|x| x.file_path == file_path);
+        if current.is_none() {
+            return None;
+        }
+        let current_index = current.unwrap();
+        // Return the last one if is the first one.
+        if current_index == 0 {
+            return Some(self.music.len() - 1);
+        }
+        Some(current_index - 1)
+    }
+
+    /// Get index (in playlist) of the next music after the one at `file_path`.
+    ///
+    /// * Return `None` if `file_path` not exists in playlist.
+    /// * Return the next music's index in playlist if found.
+    /// * Return the first one if `file_path` is the last one.
+    pub fn next_of_path(&self, file_path: &str) -> Option<usize> {
+        if self.music.is_empty() {
+            return None;
+        }
+        let current = self.music.iter().position(|x| x.file_path == file_path);
+        if current.is_none() {
+            return None;
+        }
+        let current_index = current.unwrap();
+        // Return the first one if is the last one.
+        if current_index >= self.music.len() {
+            return Some(0);
+        }
+        Some(current_index + 1)
+    }
+
+    /// Get the music at `index`.
+    ///
+    /// * Return none if index out of range.
+    pub fn music_at(&self, index: usize) -> Option<Music> {
+        self.music.get(index).map(|x| x.to_owned())
+    }
+
     /// Add music.
     pub fn add_music(&mut self, music: Vec<Music>) {
         self.music.extend(music);

@@ -91,6 +91,11 @@ pub struct Player {
     /// Current status.
     status: PlayerStatus,
 
+    /// File path of current playing music.
+    ///
+    /// None if no music loaded.
+    current_file_path: Option<String>,
+
     /// The output stream on the audio device.
     #[debug_ignore]
     output_stream: OutputStream,
@@ -138,6 +143,7 @@ impl Player {
         let sink = Sink::try_new(&output_stream_handle).context(t!("player.failedToInit"))?;
         Ok(Player {
             status: PlayerStatus::Initial,
+            current_file_path: None,
             output_stream,
             output_stream_handle,
             sink,
@@ -162,14 +168,37 @@ impl Player {
             Decoder::new(file).context(t!("player.failedToDecodeAudioFile", path = path))?;
         let (_s, stream_handle) = OutputStream::try_default().unwrap();
         let sink = Sink::try_new(&stream_handle).context(t!("player.failedToInit"))?;
-        sink.append(source);
-        sink.sleep_until_end();
-
+        self.sink.stop();
         self.sink.clear();
-        // self.sink.append(source);
+        sink.append(source);
+        self.sink = sink;
         self.status = PlayerStatus::Playing;
         self.sink.sleep_until_end();
+        self.trigger_next_loop();
         Ok(())
+    }
+
+    /// Play next music in current playlist.
+    pub async fn play_next(&mut self) {
+        if self.current_file_path.is_none() {
+            error!("failed to play next one: current not playing any");
+            return;
+        }
+        let next_one_index = self
+            .playlist
+            .next_of_path(self.current_file_path.as_ref().unwrap().as_str());
+        if next_one_index.is_none() {
+            error!("failed to play next one: index of next one not found in playlist");
+            return;
+        }
+        let next_one = self.playlist.music_at(next_one_index.unwrap());
+        if next_one.is_none() {
+            error!("failed to play next one: next one not found in playlist");
+            return;
+        }
+        if let Err(e) = self.play_file(next_one.unwrap().file_path.as_str()).await {
+            error!("error in play next: {}", e);
+        }
     }
 
     /// Pause the player, keep holding [Audio] resources.
@@ -238,7 +267,7 @@ impl Player {
                             v
                         );
                         match self.playlist.add_music_by_path(v) {
-                            Some(v) => {
+                            Ok(v) => {
                                 info!("add {} music to playlist {}", v, self.playlist.name())
                             }
                             Err(e) => error!("failed to add music to playlist: {}", e),
@@ -270,6 +299,19 @@ impl Player {
         }
         println!(">????");
         Ok(())
+    }
+
+    /// Call this function when current playing content finished.
+    ///
+    /// Trigger next loop according to [`PlayMode`].
+    fn trigger_next_loop(&mut self) {
+        // Ignore this future, do not stuck here.
+        let _ = match self.play_mode {
+            PlayMode::RepeatPlaylist => self.play_next(),
+            PlayMode::RepeatSingle => self.play_file(self.current_file_path.as_ref().unwrap()),
+            PlayMode::Random => unimplemented!(),
+        };
+        self.status = PlayerStatus::Stopped;
     }
 }
 
