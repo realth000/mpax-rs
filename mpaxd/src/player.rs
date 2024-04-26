@@ -2,12 +2,13 @@ use std::fs::File;
 use std::io::BufReader;
 use std::sync::mpsc::Receiver;
 
-use crate::playlist::Playlist;
 use anyhow::{anyhow, Context, Result};
 use log::{debug, error, info};
 use racros::AutoDebug;
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
 use rust_i18n::t;
+
+use crate::playlist::Playlist;
 
 /// Actions can apply to the player.
 #[derive(AutoDebug)]
@@ -229,6 +230,22 @@ impl Player {
             debug!("receive player action {op:#?}");
             match &op {
                 PlayAction::Play(v) => {
+                    // If music not exists in playlist, save it.
+                    if !self.playlist.contains(v) {
+                        debug!(
+                            "add music to playlist {}, triggered by play action on {}",
+                            self.playlist.name(),
+                            v
+                        );
+                        match self.playlist.add_music_by_path(v) {
+                            Some(v) => {
+                                info!("add {} music to playlist {}", v, self.playlist.name())
+                            }
+                            Err(e) => error!("failed to add music to playlist: {}", e),
+                        }
+                    }
+
+                    // Play.
                     if let Err(e) = self.play_file(v.as_str()).await {
                         error!("{e}");
                     } else {
