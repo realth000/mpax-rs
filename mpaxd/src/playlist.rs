@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::PathBuf;
 
 use anyhow::Result;
 use racros::AutoDebug;
@@ -106,28 +107,49 @@ impl Playlist {
         self.traverse_dir_add_all(path)
     }
 
+    fn add_file_to_list(&mut self, path: &str) -> Result<Music> {
+        let pb = PathBuf::from(path);
+        let file_name = pb.file_name().unwrap().to_str().unwrap().to_string();
+        Ok(Music {
+            file_path: path.to_string(),
+            file_name,
+            state: MusicState::Exists,
+            metadata: None,
+        })
+    }
+
     fn traverse_dir_add_all(&mut self, path: &str) -> Result<usize> {
         let mut count = 0;
         let mut ret = vec![];
-        for entry in fs::read_dir(path)? {
-            let path = entry.as_ref().unwrap().path();
-            let metadata = entry?.metadata()?;
-            if metadata.is_dir() {
-                count += self.traverse_dir_add_all(path.to_str().unwrap())?;
+        let info = fs::metadata(path)?;
+        if info.is_dir() {
+            for entry in fs::read_dir(path)? {
+                let metadata = entry.as_ref().unwrap().metadata()?;
+                if metadata.is_dir() {
+                    count += self.traverse_dir_add_all(path)?;
+                }
+                let file_name = entry
+                    .as_ref()
+                    .unwrap()
+                    .path()
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string();
+                ret.push(Music {
+                    file_path: path.to_string(),
+                    file_name,
+                    state: MusicState::Exists,
+                    metadata: None,
+                });
+                count += 1;
             }
-
-            let file_path = path.to_str().unwrap().to_string();
-            let file_name = path.file_name().unwrap().to_str().unwrap().to_string();
-            ret.push(Music {
-                file_path,
-                file_name,
-                state: MusicState::Exists,
-                metadata: None,
-            });
-            count += 1;
+        } else if info.is_file() && path.ends_with(".mp3") {
+            ret.push(self.add_file_to_list(path)?);
         }
-        self.add_music(ret);
 
+        self.add_music(ret);
         Ok(count)
     }
 

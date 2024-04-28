@@ -1,8 +1,9 @@
 use std::fs::File;
 use std::io::BufReader;
-use std::sync::mpsc::Receiver;
+use std::sync::mpsc::{Receiver, Sender};
 
 use anyhow::{anyhow, Context, Result};
+use futures::FutureExt;
 use log::{debug, error, info};
 use racros::AutoDebug;
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
@@ -121,6 +122,9 @@ pub struct Player {
     /// [Audio] finished.
     play_mode: PlayMode,
 
+    /// Internal sender to control operations.
+    tx: Sender<PlayAction>,
+
     /// Receiver to receive operations.
     rx: Receiver<PlayAction>,
 
@@ -138,7 +142,7 @@ impl Player {
     /// # Errors
     ///
     /// * When failed to sink the output device.
-    pub fn new(rx: Receiver<PlayAction>) -> Result<Self> {
+    pub fn new(tx: Sender<PlayAction>, rx: Receiver<PlayAction>) -> Result<Self> {
         let (output_stream, output_stream_handle) = OutputStream::try_default().unwrap();
         let sink = Sink::try_new(&output_stream_handle).context(t!("player.failedToInit"))?;
         Ok(Player {
@@ -149,6 +153,7 @@ impl Player {
             sink,
             audio: None,
             play_mode: PlayMode::RepeatPlaylist,
+            tx,
             rx,
             playlist: Playlist::new("default".to_string()),
         })
@@ -160,7 +165,11 @@ impl Player {
     ///
     /// * When failed to open [Audio] file path.
     /// * When failed to decode [Audio] file resource.
-    pub async fn play_file(&mut self, path: &str) -> Result<()> {
+    ///
+    /// **Only call this function in main loop.**
+    ///
+    /// * Other operations should be actions send through `self.tx`.
+    async fn play_file(&mut self, path: &str) -> Result<()> {
         let file = BufReader::new(
             File::open(path).context(t!("player.canNotOpenAudioFile", path = path))?,
         );
@@ -174,31 +183,34 @@ impl Player {
         self.sink = sink;
         self.status = PlayerStatus::Playing;
         self.sink.sleep_until_end();
-        self.trigger_next_loop();
+        self.status = PlayerStatus::Stopped;
         Ok(())
     }
 
     /// Play next music in current playlist.
-    pub async fn play_next(&mut self) {
+    pub async fn play_next(&mut self) -> Result<()> {
+        panic!(
+            "Here if we are automatically entered after current one finished, file path is none"
+        );
         if self.current_file_path.is_none() {
             error!("failed to play next one: current not playing any");
-            return;
+            return Ok(());
         }
         let next_one_index = self
             .playlist
             .next_of_path(self.current_file_path.as_ref().unwrap().as_str());
         if next_one_index.is_none() {
             error!("failed to play next one: index of next one not found in playlist");
-            return;
+            return Ok(());
         }
         let next_one = self.playlist.music_at(next_one_index.unwrap());
         if next_one.is_none() {
             error!("failed to play next one: next one not found in playlist");
-            return;
+            return Ok(());
         }
-        if let Err(e) = self.play_file(next_one.unwrap().file_path.as_str()).await {
-            error!("error in play next: {}", e);
-        }
+        self.tx
+            .send(PlayAction::Play(next_one.unwrap().file_path))?;
+        Ok(())
     }
 
     /// Pause the player, keep holding [Audio] resources.
@@ -270,7 +282,7 @@ impl Player {
                             Ok(v) => {
                                 info!("add {} music to playlist {}", v, self.playlist.name())
                             }
-                            Err(e) => error!("failed to add music to playlist: {}", e),
+                            Err(e) => error!("failed to add music {} to playlist: {}", v, e),
                         }
                     }
 
@@ -280,6 +292,19 @@ impl Player {
                     } else {
                         debug!("start to play");
                     }
+                    info!("step into next loop");
+                    // Trigger next loop.
+                    // Use `self.tx` to trigger next loop to avoid recursively calling play
+                    // functions.
+                    match self.play_mode {
+                        PlayMode::RepeatPlaylist => {
+                            self.play_next().await?;
+                        }
+                        PlayMode::RepeatSingle => {
+                            self.tx.send(PlayAction::Play(v.to_owned()))?;
+                        }
+                        PlayMode::Random => unimplemented!(),
+                    };
                 }
                 PlayAction::Pause => {
                     if let Err(e) = self.pause() {
@@ -300,25 +325,12 @@ impl Player {
         println!(">????");
         Ok(())
     }
-
-    /// Call this function when current playing content finished.
-    ///
-    /// Trigger next loop according to [`PlayMode`].
-    fn trigger_next_loop(&mut self) {
-        // Ignore this future, do not stuck here.
-        let _ = match self.play_mode {
-            PlayMode::RepeatPlaylist => self.play_next(),
-            PlayMode::RepeatSingle => self.play_file(self.current_file_path.as_ref().unwrap()),
-            PlayMode::Random => unimplemented!(),
-        };
-        self.status = PlayerStatus::Stopped;
-    }
 }
 
 /// Launch and run the player thread
-pub async fn launch_player_thread(rx: Receiver<PlayAction>) -> Result<()> {
+pub async fn launch_player_thread(tx: Sender<PlayAction>, rx: Receiver<PlayAction>) -> Result<()> {
     info!("player thread start");
-    let mut player = Player::new(rx).context("player thread exit with error")?;
+    let mut player = Player::new(tx, rx).context("player thread exit with error")?;
     player.run_main_loop().await?;
     info!("player thread exit");
     Ok(())
