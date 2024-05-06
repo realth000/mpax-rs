@@ -92,10 +92,8 @@ pub struct Player {
     /// Current status.
     status: PlayerStatus,
 
-    /// File path of current playing music.
-    ///
-    /// None if no music loaded.
-    current_file_path: Option<String>,
+    /// File path of last played file.
+    last_played_file_path: Option<String>,
 
     /// The output stream on the audio device.
     #[debug_ignore]
@@ -147,7 +145,7 @@ impl Player {
         let sink = Sink::try_new(&output_stream_handle).context(t!("player.failedToInit"))?;
         Ok(Player {
             status: PlayerStatus::Initial,
-            current_file_path: None,
+            last_played_file_path: None,
             output_stream,
             output_stream_handle,
             sink,
@@ -182,6 +180,7 @@ impl Player {
         sink.append(source);
         self.sink = sink;
         self.status = PlayerStatus::Playing;
+        self.last_played_file_path = Some(path.to_string());
         self.sink.sleep_until_end();
         self.status = PlayerStatus::Stopped;
         Ok(())
@@ -189,23 +188,25 @@ impl Player {
 
     /// Play next music in current playlist.
     pub async fn play_next(&mut self) -> Result<()> {
-        panic!(
-            "Here if we are automatically entered after current one finished, file path is none"
-        );
-        if self.current_file_path.is_none() {
-            error!("failed to play next one: current not playing any");
+        if self.last_played_file_path.is_none() {
+            error!("failed to play next one: no one played ever");
             return Ok(());
         }
         let next_one_index = self
             .playlist
-            .next_of_path(self.current_file_path.as_ref().unwrap().as_str());
+            .next_of_path(self.last_played_file_path.as_ref().unwrap().as_str());
         if next_one_index.is_none() {
             error!("failed to play next one: index of next one not found in playlist");
             return Ok(());
         }
-        let next_one = self.playlist.music_at(next_one_index.unwrap());
+        let next_one_index_value = next_one_index.unwrap();
+        info!("try to play next one: {}", next_one_index_value);
+        let next_one = self.playlist.music_at(next_one_index_value);
         if next_one.is_none() {
-            error!("failed to play next one: next one not found in playlist");
+            error!(
+                "failed to play next one: next one (index is {}) not found in playlist",
+                next_one_index_value
+            );
             return Ok(());
         }
         self.tx

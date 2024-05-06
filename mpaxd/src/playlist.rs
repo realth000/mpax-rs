@@ -78,7 +78,7 @@ impl Playlist {
         }
         let current_index = current.unwrap();
         // Return the first one if is the last one.
-        if current_index >= self.music.len() {
+        if current_index >= self.music.len() - 1 {
             return Some(0);
         }
         Some(current_index + 1)
