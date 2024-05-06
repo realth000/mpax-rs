@@ -13,6 +13,7 @@ env_logger = { workspace = true }
 libmpax = { path = "../libmpax" }
 log = { workspace = true }
 racros = { workspace = true }
+reqwest = "0.12.4"
 rust-i18n = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
