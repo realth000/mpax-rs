@@ -1,1 +1,1 @@
-pub static DEFAULT_SOCKET_ADDR: &str = "127.0.0.1:18519";
+pub static DEFAULT_SERVER_URL: &str = "http://127.0.0.1:18519";

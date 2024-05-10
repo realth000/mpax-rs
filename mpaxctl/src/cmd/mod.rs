@@ -1,5 +1,5 @@
 use std::fs;
-use std::io::{ErrorKind, stdout, Write};
+use std::io::{stdout, ErrorKind, Write};
 
 use anyhow::{bail, Result};
 use clap::{ArgAction, Args, Command, Parser, Subcommand};
@@ -21,7 +21,11 @@ pub struct PlayTargetGroup {
     #[arg(short = 'p', long = "prev", help = "play previous song in current playlist", action = ArgAction::SetTrue)]
     pub prev: Option<bool>,
 
-    #[arg(short = 'f', long = "file", help = "play specified music at given file path")]
+    #[arg(
+        short = 'f',
+        long = "file",
+        help = "play specified music at given file path"
+    )]
     pub file: Option<String>,
 }
 
@@ -29,7 +33,6 @@ pub struct PlayTargetGroup {
 pub struct PlayArgs {
     #[command(flatten)]
     pub play_target: PlayTargetGroup,
-
 }
 
 #[derive(AutoDebug, Clone, Parser)]
@@ -103,4 +106,3 @@ pub fn generate_completion(command: Command, generator: Shell) -> Result<()> {
     }
     Ok(())
 }
-

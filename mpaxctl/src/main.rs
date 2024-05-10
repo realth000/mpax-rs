@@ -1,21 +1,25 @@
-use reqwest::Client;
+use anyhow::Result;
+use clap::{CommandFactory, Parser};
 use reqwest::redirect::Policy;
+use reqwest::Client;
 
-use libmpax::add;
+use self::cmd::{generate_completion, run_command_with_args, MpaxCtlCommand};
 
-mod config;
+mod client;
 mod cmd;
+mod config;
 
-/// Build a http client instance.
-fn build_net_client() -> Client {
-    return Client::builder()
-        .redirect(Policy::none())
-        .build()
-        .unwrap();
-}
+#[tokio::main]
+async fn main() -> Result<()> {
+    let command = MpaxCtlCommand::parse();
+    if let Some(shell) = command.complete {
+        return generate_completion(MpaxCtlCommand::command(), shell);
+    }
 
-fn main() {
-    let x = add(1, 2);
-    println!("Hello, world! {x}");
-    let client = build_net_client();
+    if command.command.is_none() {
+        MpaxCtlCommand::command().print_help()?;
+        return Ok(());
+    }
+
+    run_command_with_args(command).await
 }
