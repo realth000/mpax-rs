@@ -1,13 +1,16 @@
 use anyhow::{bail, Result};
+use log::debug;
 use reqwest::{StatusCode, Url};
+
+use libmpax::api::{DEFAULT_SERVER_URL, ROUTE_ACTION_PLAY};
 
 use crate::client::build_net_client;
 use crate::cmd::PlayArgs;
-use crate::config::DEFAULT_SERVER_URL;
+use crate::url::build_url;
 
 pub async fn handle_play_command(args: PlayArgs) -> Result<()> {
     let play_target = args.play_target;
-    println!("??>?? {play_target:#?}");
+    debug!("play: {play_target:#?}");
     let next = play_target.next.unwrap();
     let prev = play_target.prev.unwrap();
     if next || prev {
@@ -15,10 +18,8 @@ pub async fn handle_play_command(args: PlayArgs) -> Result<()> {
     }
 
     let file_path = play_target.file.to_owned().unwrap();
-
-    println!(">>> {:#?}", play_target);
-
-    let mut url = Url::parse(DEFAULT_SERVER_URL).unwrap();
+    let mut url = build_url(ROUTE_ACTION_PLAY);
+    debug!("{} run play command", url);
     let mut query_pairs = url.query_pairs_mut();
     query_pairs.append_pair("filePath", file_path.as_str());
     query_pairs.finish();

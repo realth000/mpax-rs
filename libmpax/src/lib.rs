@@ -1,3 +1,4 @@
+pub mod api;
 mod dto;
 mod single_app;
 

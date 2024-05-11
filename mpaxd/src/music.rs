@@ -31,6 +31,6 @@ pub struct Music {
 
     /// Metadata of the file.
     ///
-    /// Cached value in memory or database..
+    /// Cached value in memory or database.
     pub metadata: Option<Metadata>,
 }

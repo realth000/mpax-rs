@@ -6,8 +6,10 @@ use clap::{ArgAction, Args, Command, Parser, Subcommand};
 use clap_complete::{generate, Shell};
 use racros::AutoDebug;
 
+use crate::cmd::pause::handle_pause_command;
 use crate::cmd::play::handle_play_command;
 
+mod pause;
 mod play;
 
 ////////////// Args //////////////
@@ -35,6 +37,9 @@ pub struct PlayArgs {
     pub play_target: PlayTargetGroup,
 }
 
+#[derive(Args, AutoDebug, Clone)]
+pub struct PauseArgs {}
+
 #[derive(AutoDebug, Clone, Parser)]
 pub struct MpaxCtlCommand {
     #[command(subcommand)]
@@ -49,7 +54,7 @@ pub enum SubCommand {
     #[command(about = "Play music")]
     Play(PlayArgs),
 
-    Pause,
+    Pause(PauseArgs),
 
     Stop,
 
@@ -59,7 +64,7 @@ pub enum SubCommand {
 pub async fn run_command_with_args(command: MpaxCtlCommand) -> Result<()> {
     match command.command.unwrap() {
         SubCommand::Play(args) => handle_play_command(args).await?,
-        SubCommand::Pause => unimplemented!(),
+        SubCommand::Pause(args) => handle_pause_command(args).await?,
         SubCommand::Stop => unimplemented!(),
         SubCommand::Exit => unimplemented!(),
     }

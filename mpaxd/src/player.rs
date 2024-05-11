@@ -107,15 +107,6 @@ pub struct Player {
     #[debug_ignore]
     sink: Sink,
 
-    /// [Audio] resource current playing.
-    ///
-    /// [None] represents not holding any resource.
-    ///
-    /// Actually this field should be held in [PlayerStatus].
-    /// But since every time switching the player status will
-    /// cause copy-paste-deconstruct, use a separate field to hold it.
-    audio: Option<Audio>,
-
     /// Player running mode, decide the action when current playing
     /// [Audio] finished.
     play_mode: PlayMode,
@@ -149,7 +140,6 @@ impl Player {
             output_stream,
             output_stream_handle,
             sink,
-            audio: None,
             play_mode: PlayMode::RepeatPlaylist,
             tx,
             rx,
@@ -182,7 +172,9 @@ impl Player {
         self.status = PlayerStatus::Playing;
         self.last_played_file_path = Some(path.to_string());
         self.sink.sleep_until_end();
+        self.sink.is_paused();
         self.status = PlayerStatus::Stopped;
+        info!("play file stopped");
         Ok(())
     }
 
@@ -220,9 +212,6 @@ impl Player {
     ///
     /// * When player is not holding any [Audio] resource.
     pub fn pause(&mut self) -> Result<()> {
-        if self.audio.is_none() {
-            return Err(anyhow!(t!("player.canNotPauseNoAudioLoaded")));
-        }
         match &self.status {
             PlayerStatus::Initial | PlayerStatus::Paused | PlayerStatus::Stopped => {
                 // Do nothing.
@@ -251,7 +240,6 @@ impl Player {
     pub fn stop(&mut self) {
         if self.status != PlayerStatus::Stopped {
             self.sink.stop();
-            self.audio = None;
             self.status = PlayerStatus::Stopped;
         }
     }

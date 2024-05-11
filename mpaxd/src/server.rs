@@ -13,6 +13,8 @@ use racros::AutoDebug;
 use serde::Deserialize;
 use tokio::net::TcpListener;
 
+use libmpax::api::{DEFAULT_SERVER_URL, ROUTE_ACTION_PAUSE, ROUTE_ACTION_PLAY};
+
 use crate::player::PlayAction;
 
 #[derive(AutoDebug, Clone)]
@@ -22,9 +24,13 @@ struct AppState {
 
 #[derive(AutoDebug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct RootParams {
+struct ActionPlayParam {
     file_path: Option<String>,
 }
+
+#[derive(AutoDebug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ActionPauseParam {}
 
 /// Launch a thread for the socket to run on.
 ///
@@ -38,28 +44,29 @@ pub async fn launch_server_thread(tx: Sender<PlayAction>) -> Result<()> {
     let app_state = Arc::new(AppState { tx: Arc::new(tx) });
 
     let server = Router::new()
-        .route("/", get(handle_root))
+        .route(ROUTE_ACTION_PLAY, get(handle_action_play))
+        .route(ROUTE_ACTION_PAUSE, get(handle_action_pause))
         .with_state(app_state);
-    let listener = TcpListener::bind("0.0.0.0:18519").await.unwrap();
+    let listener = TcpListener::bind(DEFAULT_SERVER_URL).await.unwrap();
     axum::serve(listener, server).await.unwrap();
     info!("server thread exit");
     Ok(())
 }
 
-async fn handle_root(
+async fn handle_action_play(
     State(app_state): State<Arc<AppState>>,
-    params: Option<Query<RootParams>>,
+    params: Option<Query<ActionPlayParam>>,
 ) -> Response {
-    info!("\"/\": params={:#?}", params);
+    info!("{ROUTE_ACTION_PLAY}: params={:#?}", params);
 
-    if let Some(Query(RootParams {
+    if let Some(Query(ActionPlayParam {
         file_path: Some(file_path),
     })) = params
     {
-        info!("file_path={file_path}");
+        info!("{ROUTE_ACTION_PLAY} file_path={file_path}");
         let tx = app_state.tx.clone();
         if let Err(err) = tx.send(PlayAction::Play(String::from(file_path))) {
-            error!("error when handling root: {}", err);
+            error!("{ROUTE_ACTION_PLAY} error when handling root: {}", err);
             return Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .body(Body::from(format!("{err}")))
@@ -72,6 +79,24 @@ async fn handle_root(
             .unwrap();
     }
 
+    Response::builder()
+        .status(StatusCode::OK)
+        .body(Body::empty())
+        .unwrap()
+}
+
+async fn handle_action_pause(
+    State(app_state): State<Arc<AppState>>,
+    params: Option<Query<ActionPauseParam>>,
+) -> Response {
+    info!("{ROUTE_ACTION_PAUSE} params = {:#?}", params);
+    if let Err(err) = app_state.tx.send(PlayAction::Pause) {
+        error!("{ROUTE_ACTION_PAUSE} error: {}", err);
+        return Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body(Body::from(format!("{err}")))
+            .unwrap();
+    }
     Response::builder()
         .status(StatusCode::OK)
         .body(Body::empty())
