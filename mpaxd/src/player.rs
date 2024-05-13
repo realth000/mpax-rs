@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::sync::mpsc::{Receiver, Sender};
+use std::sync::Arc;
 
 use anyhow::{anyhow, Context, Result};
 use futures::FutureExt;
@@ -95,17 +96,9 @@ pub struct Player {
     /// File path of last played file.
     last_played_file_path: Option<String>,
 
-    /// The output stream on the audio device.
-    #[debug_ignore]
-    output_stream: OutputStream,
-
-    /// Handler of [output_stream].
-    #[debug_ignore]
-    output_stream_handle: OutputStreamHandle,
-
     /// Sink to post [Audio] sources to audio devices.
     #[debug_ignore]
-    sink: Sink,
+    sink: Arc<Sink>,
 
     /// Player running mode, decide the action when current playing
     /// [Audio] finished.
@@ -132,14 +125,10 @@ impl Player {
     ///
     /// * When failed to sink the output device.
     pub fn new(tx: Sender<PlayAction>, rx: Receiver<PlayAction>) -> Result<Self> {
-        let (output_stream, output_stream_handle) = OutputStream::try_default().unwrap();
-        let sink = Sink::try_new(&output_stream_handle).context(t!("player.failedToInit"))?;
         Ok(Player {
             status: PlayerStatus::Initial,
             last_played_file_path: None,
-            output_stream,
-            output_stream_handle,
-            sink,
+            sink: Arc::new(Sink::new_idle().0),
             play_mode: PlayMode::RepeatPlaylist,
             tx,
             rx,
@@ -167,13 +156,17 @@ impl Player {
         let sink = Sink::try_new(&stream_handle).context(t!("player.failedToInit"))?;
         self.sink.stop();
         self.sink.clear();
-        sink.append(source);
-        self.sink = sink;
+        self.sink = Arc::new(sink);
+        self.sink.append(source);
         self.status = PlayerStatus::Playing;
+        let sink2 = self.sink.clone();
+
+        let _ = tokio::spawn(futures::future::lazy(move |_| {
+            sink2.play();
+            sink2.sleep_until_end();
+        }));
+
         self.last_played_file_path = Some(path.to_string());
-        self.sink.sleep_until_end();
-        self.sink.is_paused();
-        self.status = PlayerStatus::Stopped;
         info!("play file stopped");
         Ok(())
     }
