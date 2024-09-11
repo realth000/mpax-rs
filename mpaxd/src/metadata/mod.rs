@@ -25,6 +25,7 @@ pub struct Metadata {
 }
 
 /// Definition the functionality of something that can done whe metadata related works.
+#[allow(unused)]
 trait MetadataParser {
     /// Parse a single metadata from given [`file_path`].
     fn parse_metadata_from_file(file_path: impl AsRef<str>) -> Result<Metadata>;

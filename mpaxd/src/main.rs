@@ -1,10 +1,7 @@
-#![deny(clippy::all, clippy::pedantic, clippy::nursery)]
-use std::error::Error;
-use std::io::{Read, Seek};
+#[warn(clippy::all, clippy::pedantic, clippy::nursery)]
 use std::sync::mpsc::channel;
 
 use anyhow::Result;
-use futures::task::SpawnExt;
 use rust_i18n::i18n;
 
 use crate::player::{launch_player_thread, PlayAction};

@@ -30,6 +30,7 @@ impl Playlist {
     }
 
     /// Set the name.
+    #[allow(unused)]
     pub fn set_name(&mut self, name: String) {
         self.name = name;
     }
@@ -47,6 +48,7 @@ impl Playlist {
     /// * Return `None` if `file_path` not exists in playlist.
     /// * Return the next music's index in playlist if found.
     /// * Return the last one if `file_path` is the first one.
+    #[allow(unused)]
     pub fn previous_of_path(&self, file_path: &str) -> Option<usize> {
         if self.music.is_empty() {
             return None;
@@ -163,7 +165,9 @@ impl Playlist {
     /// * If [`path`] not exists, do nothing.
     ///
     /// Return the number of [`Music`] removed.
+    #[allow(unused)]
     pub fn remove_music_by_path(&mut self, path: impl AsRef<str>) -> usize {
+        let _ = path;
         unimplemented!()
     }
 }

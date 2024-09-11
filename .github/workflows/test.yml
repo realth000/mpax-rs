@@ -1,0 +1,27 @@
+name: Test
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: 'clippy, rustfmt'
+      - name: Format
+        run: |
+          cargo fmt --all -- --check
+      - name: Lint
+        run: |
+          cargo clippy --all-targets --all-features -- --deny clippy::all --deny clippy::pedantic --deny clippy::nursery
+      - name: Test
+        run: |
+          cargo test --all-features

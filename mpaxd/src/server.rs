@@ -47,8 +47,8 @@ pub async fn launch_server_thread(tx: Sender<PlayAction>) -> Result<()> {
         .route(ROUTE_ACTION_PLAY, get(handle_action_play))
         .route(ROUTE_ACTION_PAUSE, get(handle_action_pause))
         .with_state(app_state);
-    let listener = TcpListener::bind(DEFAULT_SERVER_URL).await.unwrap();
-    axum::serve(listener, server).await.unwrap();
+    let listener = TcpListener::bind(DEFAULT_SERVER_URL).await?;
+    axum::serve(listener, server).await?;
     info!("server thread exit");
     Ok(())
 }

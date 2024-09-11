@@ -4,16 +4,16 @@ use std::sync::mpsc::{Receiver, Sender};
 use std::sync::Arc;
 
 use anyhow::{anyhow, Context, Result};
-use futures::FutureExt;
 use log::{debug, error, info};
 use racros::AutoDebug;
-use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
+use rodio::{Decoder, OutputStream, Sink};
 use rust_i18n::t;
 
 use crate::playlist::Playlist;
 
 /// Actions can apply to the player.
 #[derive(AutoDebug)]
+#[allow(unused)]
 pub enum PlayAction {
     /// Play the given audio file with file path.
     Play(String),
@@ -38,6 +38,7 @@ pub enum PlayAction {
 
 /// Defines all [Player] running modes.
 #[derive(AutoDebug, PartialEq)]
+#[allow(unused)]
 enum PlayMode {
     /// Repeat to play the current playlist.
     RepeatPlaylist,
@@ -53,6 +54,7 @@ enum PlayMode {
 ///
 /// Where this [Audio] came from.
 #[derive(AutoDebug, Clone)]
+#[allow(unused)]
 pub enum AudioSource {
     /// An audio file, file path embedded.
     File(String),
@@ -65,6 +67,7 @@ pub enum AudioSource {
 
 /// Source of audio for [Player] to play.
 #[derive(AutoDebug)]
+#[allow(unused)]
 struct Audio {
     source: AudioSource,
     #[debug_value = "Decoder<File>"]
@@ -100,6 +103,9 @@ pub struct Player {
     #[debug_ignore]
     sink: Arc<Sink>,
 
+    #[debug_ignore]
+    stream: Option<Arc<OutputStream>>,
+
     /// Player running mode, decide the action when current playing
     /// [Audio] finished.
     play_mode: PlayMode,
@@ -129,6 +135,7 @@ impl Player {
             status: PlayerStatus::Initial,
             last_played_file_path: None,
             sink: Arc::new(Sink::new_idle().0),
+            stream: None,
             play_mode: PlayMode::RepeatPlaylist,
             tx,
             rx,
@@ -152,19 +159,25 @@ impl Player {
         );
         let source =
             Decoder::new(file).context(t!("player.failedToDecodeAudioFile", path = path))?;
-        let (_s, stream_handle) = OutputStream::try_default().unwrap();
+        // The _stream is an OutputStream, which should not be dropped until the playing process
+        // finishes, and it's not Send so keep in the player.
+        let (_stream, stream_handle) = OutputStream::try_default()?;
         let sink = Sink::try_new(&stream_handle).context(t!("player.failedToInit"))?;
         self.sink.stop();
         self.sink.clear();
         self.sink = Arc::new(sink);
         self.sink.append(source);
         self.status = PlayerStatus::Playing;
+        self.stream = Some(Arc::new(_stream));
         let sink2 = self.sink.clone();
 
-        let _ = tokio::spawn(futures::future::lazy(move |_| {
+        let handler = tokio::spawn(futures::future::lazy(move |_| {
+            info!("start player thread");
             sink2.play();
             sink2.sleep_until_end();
+            info!("end player thread");
         }));
+        let _ = tokio::join!(handler);
 
         self.last_played_file_path = Some(path.to_string());
         info!("play file stopped");
@@ -270,7 +283,7 @@ impl Player {
 
                     // Play.
                     if let Err(e) = self.play_file(v.as_str()).await {
-                        error!("{e}");
+                        error!("{e:#?}");
                     } else {
                         debug!("start to play");
                     }

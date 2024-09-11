@@ -1,4 +1,4 @@
-#![deny(clippy::all, clippy::pedantic, clippy::nursery)]
+#![warn(clippy::all, clippy::pedantic, clippy::nursery)]
 use anyhow::Result;
 use clap::{CommandFactory, Parser};
 
@@ -9,6 +9,7 @@ mod cmd;
 mod config;
 mod url;
 
+#[allow(clippy::future_not_send)]
 #[tokio::main]
 async fn main() -> Result<()> {
     env_logger::init();

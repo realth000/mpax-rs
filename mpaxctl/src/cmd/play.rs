@@ -1,8 +1,8 @@
 use anyhow::{bail, Result};
 use log::debug;
-use reqwest::{StatusCode, Url};
+use reqwest::StatusCode;
 
-use libmpax::api::{DEFAULT_SERVER_URL, ROUTE_ACTION_PLAY};
+use libmpax::api::ROUTE_ACTION_PLAY;
 
 use crate::client::build_net_client;
 use crate::cmd::PlayArgs;
