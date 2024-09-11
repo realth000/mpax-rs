@@ -2,7 +2,7 @@ use racros::AutoDebug;
 use serde::{Deserialize, Serialize};
 
 /// Operations defined for clients to use in request.
-#[derive(AutoDebug, Deserialize, Hash, Serialize, PartialEq)]
+#[derive(AutoDebug, Deserialize, Hash, Serialize, PartialEq, Eq)]
 pub enum RequestAction {
     /// Request to play an audio file with file path.
     Play(String),
@@ -21,7 +21,7 @@ pub enum RequestAction {
 }
 
 /// Model used for client to send request to the server side.
-#[derive(AutoDebug, Deserialize, Hash, Serialize, PartialEq)]
+#[derive(AutoDebug, Deserialize, Hash, Serialize, PartialEq, Eq)]
 pub struct AudioRequestModel {
     action: RequestAction,
 }

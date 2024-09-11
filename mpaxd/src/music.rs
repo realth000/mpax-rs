@@ -3,7 +3,7 @@ use racros::{AutoDebug, AutoStr};
 use crate::metadata::Metadata;
 
 /// Enum indicating music's status.
-#[derive(AutoDebug, AutoStr, Clone, Default, PartialEq)]
+#[derive(AutoDebug, AutoStr, Clone, Default, PartialEq, Eq)]
 pub enum MusicState {
     /// Music file exists.
     Exists,

@@ -8,7 +8,7 @@ axum = { version = "0.7.4" }
 clap = { version = "4.4.18" }
 env_logger = { version = "0.11.1" }
 log = { version = "0.4.20" }
-racros = { version = "0.1.0" }
+racros = { version = "0.2.1" }
 rust-i18n = { version = "3.0.1" }
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = { version = "1.0.113" }

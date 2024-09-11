@@ -15,7 +15,7 @@ async fn main() -> Result<()> {
     env_logger::init();
     let command = MpaxCtlCommand::parse();
     if let Some(shell) = command.complete {
-        return generate_completion(MpaxCtlCommand::command(), shell);
+        return generate_completion(&MpaxCtlCommand::command(), shell);
     }
 
     if command.command.is_none() {

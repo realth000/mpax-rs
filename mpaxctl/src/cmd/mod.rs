@@ -61,6 +61,7 @@ pub enum SubCommand {
     Exit,
 }
 
+#[allow(clippy::future_not_send)]
 pub async fn run_command_with_args(command: MpaxCtlCommand) -> Result<()> {
     match command.command.unwrap() {
         SubCommand::Play(args) => handle_play_command(args).await?,
@@ -71,7 +72,7 @@ pub async fn run_command_with_args(command: MpaxCtlCommand) -> Result<()> {
     Ok(())
 }
 
-pub fn generate_completion(command: Command, generator: Shell) -> Result<()> {
+pub fn generate_completion(command: &Command, generator: Shell) -> Result<()> {
     let mut save_path: Option<&str> = None;
     let mut save_target: Box<dyn Write> = match generator {
         Shell::Bash | Shell::Zsh => {

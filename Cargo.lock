@@ -1401,9 +1401,9 @@ dependencies = [
 
 [[package]]
 name = "racros"
-version = "0.1.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4723b19bea8fec120a8c5d9b4b8f7258ff132e8735b306ef1e24f74bfb7b2929"
+checksum = "34a01c5cd890ab5a07a6e75684e90339b6653dffcf06a1d63c5d0e6683008e6e"
 dependencies = [
  "proc-macro2",
  "quote",

@@ -20,9 +20,9 @@ mod server;
 async fn main() -> Result<()> {
     env_logger::init();
     let (tx, rx) = channel::<PlayAction>();
-    let _tx = tx.clone();
-    let player_thread_handle = tokio::spawn(launch_player_thread(_tx, rx));
-    let server_thread_handle = tokio::spawn(launch_server_thread(tx));
+    let tx2 = tx.clone();
+    let player_thread_handle = tokio::spawn(launch_player_thread(tx, rx));
+    let server_thread_handle = tokio::spawn(launch_server_thread(tx2));
     player_thread_handle.await??;
     server_thread_handle.await??;
     //join_all([player_thread_handle, server_thread_handle]).await;
