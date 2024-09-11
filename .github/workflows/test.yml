@@ -13,6 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Update source
+        run: |
+          sudo apt update
+          sudo apt install libasound2-dev # required by alsa-sys
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: 'clippy, rustfmt'
