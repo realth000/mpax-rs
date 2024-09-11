@@ -1,3 +1,4 @@
+#![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 use anyhow::Result;
 use clap::{CommandFactory, Parser};
 

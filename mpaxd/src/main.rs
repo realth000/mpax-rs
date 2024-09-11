@@ -1,3 +1,4 @@
+#![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 use std::error::Error;
 use std::io::{Read, Seek};
 use std::sync::mpsc::channel;
