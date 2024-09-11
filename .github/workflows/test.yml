@@ -16,7 +16,7 @@ jobs:
       - name: Update source
         run: |
           sudo apt update
-          sudo apt install libasound2-dev # required by alsa-sys
+          sudo apt install libasound2-dev libdbus-1-dev
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: 'clippy, rustfmt'
